@@ -390,3 +390,99 @@ this project demonstrates how to eliminate an entire class of high-impact deploy
 
 ---
 
+
+## Case Study: *QuickServe CI/CD Reliability Challenges*
+
+### Scenario Overview
+
+QuickServe is an online food delivery application that relies on frequent deployments to deliver new features and fixes. While a CI/CD pipeline is in place, deployments often fail or behave inconsistently. Common issues include errors such as **“Environment variable not found”**, **“Port already in use”**, and cases where **older containers continue running in production alongside newer versions**.
+
+These failures highlight gaps in containerization discipline, environment configuration, and deployment orchestration rather than flaws in application code.
+
+---
+
+## What Went Wrong
+
+### 1. Inconsistent Environment Variable Handling
+
+The application depends on environment variables for configuration, but these variables were not consistently injected across development, CI, and production environments. As a result, containers sometimes started without required configuration, causing runtime failures.
+
+**Root cause:**
+There was no single, well-defined mechanism for passing environment variables from the CI pipeline into the running container.
+
+---
+
+### 2. Poor Container Lifecycle Management
+
+Deployments did not explicitly stop and remove existing containers before starting new ones. This led to:
+
+* Port conflicts when multiple containers attempted to bind to the same port
+* Multiple application versions running simultaneously
+* Inconsistent behavior across requests
+
+**Root cause:**
+The deployment process lacked clear ownership of container startup and shutdown.
+
+---
+
+### 3. Weak CI/CD Guardrails
+
+The pipeline allowed deployments to proceed even when:
+
+* Required environment variables were missing
+* Containers failed health checks
+* Previous deployments were still running
+
+**Root cause:**
+The pipeline was treated as a simple automation script rather than a controlled, validated system.
+
+---
+
+## How This Project Addresses These Issues
+
+### Containerization as the Source of Truth
+
+This project packages the application into a single Docker image per build. Each image is immutable and versionable, ensuring the same artifact is used from CI through deployment.
+
+This eliminates discrepancies between local, CI, and production environments.
+
+---
+
+### Explicit Environment Configuration
+
+Environment variables are:
+
+* Defined per environment (`.env.development`, `.env.staging`, `.env.production`)
+* Never committed to source control
+* Injected at runtime when containers start
+
+This ensures every container receives the configuration it requires before the application runs.
+
+---
+
+### Predictable Deployment Flow
+
+A correct deployment flow:
+
+1. Stops and removes the existing container
+2. Starts a new container from the latest image
+3. Binds ports explicitly and consistently
+4. Fails early if configuration is missing
+
+This prevents port conflicts and version drift.
+
+---
+
+## Key Takeaway
+
+The QuickServe issues demonstrate a common pattern in modern deployments: **most production failures are caused by configuration and orchestration errors, not application logic**.
+
+By enforcing:
+
+* Strong container boundaries
+* Clear environment variable ownership
+* Deterministic deployment steps
+
+this project shows how CI/CD pipelines can become reliable, repeatable, and safe — even as deployment frequency increases.
+
+
