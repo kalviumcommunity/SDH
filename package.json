@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "build:development": "cp .env.development .env && next build",
+    "build:staging": "cp .env.staging .env && next build",
+    "build:production": "cp .env.production .env && next build"
   },
   "dependencies": {
     "next": "16.0.10",
